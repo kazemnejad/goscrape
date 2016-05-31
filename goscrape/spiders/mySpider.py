@@ -1,6 +1,6 @@
+import random
 import scrapy
-from numpy.core.fromnumeric import size
-from scrapy.selector import Selector
+import string
 
 
 class CafeBazaarSpider(scrapy.Spider):
@@ -16,13 +16,13 @@ class CafeBazaarSpider(scrapy.Spider):
         filename = response.url.split("/")[-2] + '.html'
 
         for url in response.xpath('//a/@href').extract():
-            cat_name=''.join(response.xpath('//a/span/text()').extract())
-            yield {"status": "cat", "item": {'slug': url.split('/')[-2],'name':cat_name}}
+            cat_name = ''.join(response.xpath('//a/span/text()').extract())
+            yield {"status": "cat", "item": {'slug': url.split('/')[-2], 'name': cat_name}}
         for url in response.xpath('//a/@href').extract():
             yield scrapy.Request('https://cafebazaar.ir' + url, callback=self.find_more_app)
 
     def find_more_app(self, response):
-        #find the more app button in the page
+        # find the more app button in the page
         for url in response.xpath('//a/@href').extract():
             if ("new" in url) and ("best" not in url) and ("list" in url):
                 url = url.replace(" ", "")
@@ -31,7 +31,7 @@ class CafeBazaarSpider(scrapy.Spider):
                 yield scrapy.Request('https://cafebazaar.ir' + url + '&partial=true', callback=self.find_all_app)
 
     def find_all_app(self, response):
-        #find all apps data
+        # find all apps data
         i = 0
         urls = response.xpath('//a/@href').extract()
         while True:
@@ -48,7 +48,7 @@ class CafeBazaarSpider(scrapy.Spider):
             i += 1
 
     def see_app_details(self, response):
-        #find all details of apps
+        # find all details of apps
         dic = {}
         category = response.xpath("//span[@itemprop='applicationSubCategory']/text()").extract_first()
         version = ''.join(response.xpath("//span[@itemprop='softwareVersion']/text()").extract())
@@ -60,50 +60,54 @@ class CafeBazaarSpider(scrapy.Spider):
         name = ''.join(response.xpath("//h1[@itemprop='name']/text()").extract())
         author = ''.join(response.xpath("//div[@itemprop='author']/a/span/text()").extract())
         try:
-            dic['author_link']= ''.join(response.xpath("//div[@itemprop='author']/a/@href").extract()).split('/')[-2]
+            dic['dev_slug'] = ''.join(response.xpath("//div[@itemprop='author']/a/@href").extract()).split('/')[-2]
         except:
-            pass
-        category_link=''.join(response.xpath("//span[@class='pull-right']/a/@href").extract())
+            dic['dev_slug'] = self.generate_random_slug()
+
+        category_link = ''.join(response.xpath("//span[@class='pull-right']/a/@href").extract())
         icon = ''.join(response.xpath("//img[@class='app-img']/@src").extract())
-        component=response.url.split("/")[-2]
+        component = response.url.split("/")[-2]
 
         version = version.replace("\n", "")
         version = version.strip()
-        size=size.replace("\n","")
-        size=size.strip()
-        act_install=act_install.replace("less than ","")
-        act_install=act_install.replace(",","")
-        act_install=act_install.replace("+","")
+        size = size.replace("\n", "")
+        size = size.strip()
+        act_install = act_install.replace("less than ", "")
+        act_install = act_install.replace(",", "")
+        act_install = act_install.replace("+", "")
         removeDict = {'width': 10, '100%': 1, '80%': 1, '60%': 1, '40%': 1, '20%': 1}
         for i in removeDict:
             rate = rate.replace(i, '', removeDict[i])
-            rate=rate.replace(':','')
+            rate = rate.replace(':', '')
 
-        rate=rate.strip()
-        rate=rate.replace("\n","")
-        rate=rate.replace("%","")
-        rate=int(rate)
+        rate = rate.strip()
+        rate = rate.replace("\n", "")
+        rate = rate.replace("%", "")
+        rate = int(rate)
         name = name.replace('\n', '')
         name = name.strip()
-        icon = icon.replace('\n','')
+        icon = icon.replace('\n', '')
         icon = icon.strip()
 
-        dic['category_name'] = category
-        dic['category_link']=category_link.split("/")[-2]
-        dic['version'] = version
+        dic['cat_name'] = category
+        dic['cat_slug'] = category_link.split("/")[-2]
+        dic['version'] = version if version and len(version) > 0 else "0.0"
 
         try:
             dic['act_install'] = int(act_install)
         except(ValueError):
             print "kose ammat "
+        
         dic['size'] = int(size)
         dic['price'] = int(price)
         dic['name'] = name
-        dic['author']=author
-        dic['component']=component
+        dic['dev_name'] = author
+        dic['component'] = component
         dic['icon'] = icon
         print "******"
         print dic
         print "*******"
-        input()
         yield {"status": "app", 'item': dic}
+
+    def generate_random_slug(size=6, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(size))
