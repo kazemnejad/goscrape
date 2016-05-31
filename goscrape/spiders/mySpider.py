@@ -57,25 +57,28 @@ class CafeBazaarSpider(scrapy.Spider):
         rate = ''.join(response.xpath("//div[@class='rating-fill']/@style").extract())
         name = ''.join(response.xpath("//h1[@itemprop='name']/text()").extract())
         author = ''.join(response.xpath("//div[@itemprop='author']/a/span/text()").extract())
-        component=response.url.split("/")[-2]
+        component = response.url.split("/")[-2]
+        icon = ''.join(response.xpath("//img[@class='app-img']/@src").extract())
+
         version = version.replace("\n", "")
         version = version.strip()
-        size=size.replace("\n","")
-        size=size.strip()
-        act_install=act_install.replace("less than ","")
-        act_install=act_install.replace(",","")
-        act_install=act_install.replace("+","")
+        size = size.replace("\n", "")
+        size = size.strip()
+        act_install = act_install.replace("less than ", "")
+        act_install = act_install.replace(",", "")
+        act_install = act_install.replace("+", "")
         removeDict = {'width': 10, '100%': 1, '80%': 1, '60%': 1, '40%': 1, '20%': 1}
         for i in removeDict:
             rate = rate.replace(i, '', removeDict[i])
-            rate=rate.replace(':','')
-
-        rate=rate.strip()
-        rate=rate.replace("\n","")
-        rate=rate.replace("%","")
-        rate=int(rate)
+            rate = rate.replace(':', '')
+        rate = rate.strip()
+        rate = rate.replace("\n", "")
+        rate = rate.replace("%", "")
+        rate = int(rate)
         name = name.replace('\n', '')
         name = name.strip()
+        icon = icon.replace('\n','')
+        icon = icon.strip()
 
         dic['category'] = category
         dic['version'] = version
@@ -86,7 +89,7 @@ class CafeBazaarSpider(scrapy.Spider):
         dic['size'] = int(size)
         dic['price'] = int(price)
         dic['name'] = name
-        dic['author']=author
-        dic['component']=component
-
+        dic['author'] = author
+        dic['component'] = component
+        dic['icon'] = icon
         yield {"status": "app", 'item': dic}
