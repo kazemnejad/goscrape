@@ -1,10 +1,13 @@
+# -*- coding: utf8 -*-
+
 import random
 import scrapy
 import string
+import re
 
 
 class CafeBazaarSpider(scrapy.Spider):
-    name = "dmoz"
+    name = "cafebazaar"
     allowed_domains = ["cafebazaar.ir"]
     start_urls = [
         "https://cafebazaar.ir/cat/?l=fa&partial=true"
@@ -12,12 +15,12 @@ class CafeBazaarSpider(scrapy.Spider):
     url_global = ""
 
     def parse(self, response):
-
-        filename = response.url.split("/")[-2] + '.html'
-
-        for url in response.xpath('//a/@href').extract():
-            cat_name = ''.join(response.xpath('//a/span/text()').extract())
-            yield {"status": "cat", "item": {'slug': url.split('/')[-2], 'name': cat_name}}
+        # for url in response.xpath('//a').extract():
+        #     url = url.replace('\n', '')
+        #     url = url.strip()
+        #     cat_slug = re.match(r'.*cat\/(.*)\/.*$', url, re.X).group()[0]
+        #     cat_name = re.match(r'.*\>(.*)\<.*$', url, re.X).group()[0]
+        #     yield {"status": "cat", "item": {'slug': cat_slug, 'name': cat_name}}
         for url in response.xpath('//a/@href').extract():
             yield scrapy.Request('https://cafebazaar.ir' + url, callback=self.find_more_app)
 
@@ -42,6 +45,7 @@ class CafeBazaarSpider(scrapy.Spider):
                 url = urls[i]
             except:
                 break
+
             url = url.replace(" ", "")
             url = url.replace("\n", "")
             yield scrapy.Request('https://cafebazaar.ir' + url, callback=self.see_app_details)
@@ -72,9 +76,9 @@ class CafeBazaarSpider(scrapy.Spider):
         version = version.strip()
         size = size.replace("\n", "")
         size = size.strip()
-        act_install = act_install.replace("less than ", "")
-        act_install = act_install.replace(",", "")
-        act_install = act_install.replace("+", "")
+        act_install = act_install.replace(u"کمتر از", "").strip()
+        act_install = act_install.replace(u"٬", "")
+        act_install = act_install.replace(u"+", "")
         removeDict = {'width': 10, '100%': 1, '80%': 1, '60%': 1, '40%': 1, '20%': 1}
         for i in removeDict:
             rate = rate.replace(i, '', removeDict[i])
@@ -97,17 +101,16 @@ class CafeBazaarSpider(scrapy.Spider):
             dic['act_install'] = int(act_install)
         except(ValueError):
             print "kose ammat "
-        
+
         dic['size'] = int(size)
         dic['price'] = int(price)
         dic['name'] = name
         dic['dev_name'] = author
         dic['component'] = component
         dic['icon'] = icon
-        print "******"
-        print dic
-        print "*******"
+        dic['rate'] = rate
+
         yield {"status": "app", 'item': dic}
 
-    def generate_random_slug(size=6, chars=string.ascii_uppercase + string.digits):
-        return ''.join(random.choice(chars) for _ in range(size))
+    def generate_random_slug(self, s=6, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(s))
