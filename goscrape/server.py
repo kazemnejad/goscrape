@@ -42,4 +42,6 @@ def search(query):
 def index():
     return render_template("homepage.html")
 
-app.run()
+def run():
+    global app
+    app.run()
