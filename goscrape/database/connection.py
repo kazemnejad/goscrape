@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-import config
+import goscrape.database.config as config
 
 engine = create_engine('mysql://' + config.db['user'] + ':' + config.db['password'] + '@localhost/' + config.db['dbname'] + "?charset=utf8",
                        convert_unicode=True)
