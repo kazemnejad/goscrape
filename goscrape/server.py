@@ -2,6 +2,7 @@
 from sqlalchemy import or_
 
 from flask import Flask, jsonify, render_template
+from flask_cors import CORS
 
 from goscrape.database import config
 from goscrape.database.models import Application
@@ -9,6 +10,8 @@ from goscrape.database.models import Application
 app = Flask(__name__)
 app.debug = True
 app.secret_key = config.SECRET_KEY
+
+CORS(app)
 
 
 @app.route("/search/app/<string:query>", methods=["GET"])
@@ -44,4 +47,4 @@ def index():
 
 def run():
     global app
-    app.run()
+    app.run(threaded=True)
