@@ -1,6 +1,8 @@
 # -*- coding: utf8 -*-
 
 import random
+from _mysql import result
+
 import scrapy
 import string
 import re
@@ -15,13 +17,17 @@ class CafeBazaarSpider(scrapy.Spider):
     url_global = ""
 
     def parse(self, response):
-        # for url in response.xpath('//a').extract():
-        #     url = url.replace('\n', '')
-        #     url = url.strip()
-        #     cat_slug = re.match(r'.*cat\/(.*)\/.*$', url, re.X).group()[0]
-        #     cat_name = re.match(r'.*\>(.*)\<.*$', url, re.X).group()[0]
-        #     yield {"status": "cat", "item": {'slug': cat_slug, 'name': cat_name}}
+        for url in response.xpath('//a').extract():
+            url = url.replace('\n', '')
+            url = url.strip()
+            cat_slug = re.match(r'.*cat\/(.*)\/\?.*$', url, re.X).groups()[0]
+            cat_name = re.match(r'.*\>(.*)\<.*$', url, re.X).groups()[0]
+            print "categoris app", cat_name.strip(), cat_slug
+            yield {"status": "cat", "item": {'slug': cat_slug, 'name': cat_name}}
+        i = 0
         for url in response.xpath('//a/@href').extract():
+            print 'categoris url', 'https://cafebazaar.ir' + url, i
+            i += 1
             yield scrapy.Request('https://cafebazaar.ir' + url, callback=self.find_more_app)
 
     def find_more_app(self, response):
@@ -31,16 +37,28 @@ class CafeBazaarSpider(scrapy.Spider):
                 url = url.replace(" ", "")
                 url = url.replace("\n", "")
                 self.url_global = url + '&partial=true'
+                print 'url new-app', 'https://cafebazaar.ir' + url + '&partial=true'
                 yield scrapy.Request('https://cafebazaar.ir' + url + '&partial=true', callback=self.find_all_app)
+        print 'self.global', self.url_global
 
     def find_all_app(self, response):
         # find all apps data
-        i = 0
+        pattern = re.compile(r'(&p=)(\d*)')
+        response_url = re.search(pattern, response.url)
+        if response_url:
+            url_p = int(response_url.groups()[1])
+        else:
+            url_p = 0
+        i = url_p
         urls = response.xpath('//a/@href').extract()
+
         while True:
             if i % 24 == 0:
-                yield scrapy.Request('https://cafebazaar.ir' + self.url_global + '&p=' + str(i),
-                                     callback=self.find_all_app)
+                if response_url:
+                    target_url = re.sub(pattern, '&p=' + str(i), response.url)
+                else:
+                    target_url = response.url + '&p=0'
+                yield scrapy.Request(target_url, callback=self.find_all_app)
             try:
                 url = urls[i]
             except:
@@ -100,7 +118,7 @@ class CafeBazaarSpider(scrapy.Spider):
         try:
             dic['act_install'] = int(act_install)
         except(ValueError):
-            print "kose ammat "
+            print ("kose ammat ")
 
         dic['size'] = int(size)
         dic['price'] = int(price)
@@ -109,7 +127,7 @@ class CafeBazaarSpider(scrapy.Spider):
         dic['component'] = component
         dic['icon'] = icon
         dic['rate'] = rate
-
+        # print "********************\n",dic,'\n**********************'
         yield {"status": "app", 'item': dic}
 
     def generate_random_slug(self, s=6, chars=string.ascii_uppercase + string.digits):
