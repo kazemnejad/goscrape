@@ -4,6 +4,7 @@ from sqlalchemy import or_
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
+from ai import get_suggested_apps
 from goscrape.database import config
 from goscrape.database.models import Application
 
@@ -16,8 +17,15 @@ CORS(app)
 
 @app.route("/suggest", methods=["POST"])
 def suggest():
-    apps = request.form.getlist("appid[]")
-    print apps
+    component_names = request.form.getlist("appid[]")
+
+    conditions = []
+    for cn in component_names:
+        conditions.append(Application.component_name == cn)
+
+    result = [app for app in Application.query.filter(or_(*conditions))]
+    print get_suggested_apps(result)
+
     return ""
 
 
