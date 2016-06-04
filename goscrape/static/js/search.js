@@ -8,7 +8,8 @@ function initSearch() {
         type: 'category',
         minCharacters: 1,
         apiSettings: {
-            onFailure: function () {
+            onFailure: function (response) {
+                console.log(response);
                 $(this).search('display message', '<b>Hold off a few minutes</b> <div class="ui divider"></div> GitHub rate limit exceeded for anonymous search.');
             },
             onResponse: function (githubResponse) {
@@ -23,40 +24,37 @@ function initSearch() {
                 }
                 $.each(githubResponse.items, function (index, item) {
                     var
-                        language = item.language || 'Unknown',
-                        maxLength = 200,
-                        description
+                        cat = item.category || 'Unkn own',
+                        maxLength = 200
                         ;
-                    if (index >= 5) {
+                    if (index >= 10) {
                         // only show 8 results
                         return false;
                     }
+
                     // Create new language category
-                    if (response.results[language] === undefined) {
-                        response.results[language] = {
-                            name: language,
+                    if (response.results[cat] === undefined) {
+                        response.results[cat] = {
+                            name: cat,
                             results: []
                         };
                     }
-                    description = (item.description < maxLength)
-                        ? item.description
-                        : item.description.substr(0, maxLength) + '...'
-                    ;
-                    description = $.fn.search.settings.templates.escape(description);
+
                     // Add result to category
-                    response.results[language].results.push({
+                    response.results[cat].results.push({
                         title: item.name,
-                        description: description
+                        category: item.category,
+                        icon: item.icon,
+                        component: item.component
                     });
                 });
                 return response;
             },
-            url: 'https://api.github.com/search/repositories?q={query}'
+            url: 'http://127.0.0.1:5000/search/app/{query}'
         },
-        onSelect: function (kir, kiri) {
-            console.log(kir.title);
-            console.log(kiri);
-            addFields(kir.title);
+        onSelect: function (item, response) {
+            console.log(item)
+            addFields(item.title, item.category, item.icon, item.component);
         }
     })
     ;

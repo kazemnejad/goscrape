@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 from sqlalchemy import or_
 
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
 from goscrape.database import config
@@ -12,6 +12,13 @@ app.debug = True
 app.secret_key = config.SECRET_KEY
 
 CORS(app)
+
+
+@app.route("/suggest", methods=["POST"])
+def suggest():
+    apps = request.form.getlist("appid[]")
+    print apps
+    return ""
 
 
 @app.route("/search/app/<string:query>", methods=["GET"])
@@ -44,6 +51,7 @@ def search(query):
 @app.route("/")
 def index():
     return render_template("homepage.html")
+
 
 def run():
     global app
