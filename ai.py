@@ -40,7 +40,7 @@ def learn_ANN(training_list):
         for j in range(len(training_list[i]) - 1):
             answer += training_list[i][j] * weight[j]
         print 'answer ', answer
-        if answer / 1000.0 > 1:
+        if answer / 10000.0 > 1:
             answer = 1
         else:
             answer = -1
@@ -65,10 +65,14 @@ def get_suggested_apps(apps):
     training_list, categori_dict = set_training_list(apps)
     weight = learn_ANN(training_list)
     result = []
+    print weight
+    print categori_dict
     for i in Application.query.all():
         answer = set_answer(i, weight, categori_dict)
         # print 'finall answer : ', answer
-        if answer / 1000.0 > 1:
-            result.append(i)
+        if answer / 10000.0 > 1:
+            # print answer
+            result.append((i, answer))
+    print len(result)
 
     return result
