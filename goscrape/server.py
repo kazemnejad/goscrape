@@ -23,10 +23,9 @@ def suggest():
     for cn in component_names:
         conditions.append(Application.component_name == cn)
 
-    result = [app for app in Application.query.filter(or_(*conditions))]
-    print get_suggested_apps(result)
+    suggested = get_suggested_apps([app for app in Application.query.filter(or_(*conditions))])
 
-    return ""
+    return render_template("suggest.html", apps=suggested)
 
 
 @app.route("/search/app/<string:query>", methods=["GET"])

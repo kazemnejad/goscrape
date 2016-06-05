@@ -1,4 +1,5 @@
 import random
+
 from goscrape.database.models import Application
 
 
@@ -72,7 +73,7 @@ def get_suggested_apps(apps):
         # print 'finall answer : ', answer
         if answer / 10000.0 > 1:
             # print answer
-            result.append((i, answer))
+            result.append(i)
     print len(result)
 
-    return result
+    return result[:20]
