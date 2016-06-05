@@ -10,7 +10,7 @@
 
 
 </head>
-<body style="background-color: #909090">
+<body>
 <div class="ui four cards" style="padding: 10%">
     {% for app in apps %}
         <a class="red card" href="https://cafebazaar.ir/app/{{ app.component_name }}/?l=fa">
@@ -19,11 +19,17 @@
                     {{ app.name }}
                 </div>
                 <div class="ui red ribbon label" style="margin-top: 15%">
-                    {{ app.categories[0].name }}
+                    <i class="folder open icon"></i> {{ app.categories[0].name }}
                 </div>
                 <div class="ui green ribbon label" style="margin-top: 30%">
-                    {{ app.price/10 if app.price>0 else 'رایگان' }}
+                    <i class="dollar icon"></i> {{ app.price/10 if app.price>0 else 'رایگان' }}
                 </div>
+
+                {% for i in range(app.rate // 20) %}
+                   <i class="star icon"></i>
+                {% endfor %}
+                </div>
+
                 {#<div class="ui red ribbon label" style="margin-top: 20%">
                     <i class="spoon icon"></i>{{ app.categories[0].name }}
                 </div>#}
